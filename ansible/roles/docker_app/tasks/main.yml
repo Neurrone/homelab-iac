@@ -1,0 +1,49 @@
+---
+- name: "Ensure {{ app_name }} directory exists"
+  file:
+    path: "{{ docker_base_path }}/{{ app_name }}"
+    state: directory
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0755"
+- name: "Ensure {{ app_name }} data directories exist"
+  file:
+    path: "{{ docker_base_path }}/{{ app_name }}/data/{{ item }}"
+    state: directory
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0755"
+  loop: "{{ app_data_dirs | default([]) }}"
+  when: app_data_dirs is defined
+- name: "Deploy {{ app_name }} config files"
+  copy:
+    src: "files/{{ item.src }}"
+    dest: "{{ docker_base_path }}/{{ app_name }}/data/{{ item.dest }}"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "{{ item.mode | default('0644') }}"
+  loop: "{{ app_config_files | default([]) }}"
+  when: app_config_files is defined
+- name: "Deploy {{ app_name }} config templates"
+  template:
+    src: "{{ app_name }}/{{ item.src }}"
+    dest: "{{ docker_base_path }}/{{ app_name }}/data/{{ item.dest }}"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "{{ item.mode | default('0644') }}"
+  loop: "{{ app_config_templates | default([]) }}"
+  when: app_config_templates is defined
+- name: "Deploy {{ app_name }} docker-compose file"
+  template:
+    src: "{{ app_name }}/docker-compose.yml.j2"
+    dest: "{{ docker_base_path }}/{{ app_name }}/docker-compose.yml"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0644"
+- name: "Start {{ app_name }} container"
+  community.docker.docker_compose_v2:
+    project_src: "{{ docker_base_path }}/{{ app_name }}"
+    state: present
+    pull: "always"
+    recreate: "auto"
+  become_user: "{{ ansible_user }}"

@@ -1,0 +1,2 @@
+# Common settings across all docker VMs
+timezone: "Asia/Singapore"

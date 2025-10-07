@@ -1,0 +1,60 @@
+storage:
+  type: sqlite
+  path: /data/data.db
+
+connectivity:
+  checker:
+    target: 1.1.1.1:53
+    interval: 30s
+
+alerting:
+  telegram:
+    id: {{telegram.id}}"
+    token: {{ telegram.token}}"
+
+ui:
+  title: "External instance ǀ Gatus"
+  description: "Status page for external Gatus instance"
+
+default-endpoint: &defaults
+  interval: 30s
+  alerts:
+    - type: telegram
+      send-on-resolved: true
+  conditions:
+    - "[STATUS] == 200"
+    - "[CERTIFICATE_EXPIRATION] > 48h"
+    - "[RESPONSE_TIME] < 1500"
+  ui:
+    hide-conditions: true
+    hide-hostname: true
+    hide-url: true
+
+endpoints:
+  - name: Internally hosted Gatus
+    <<: *defaults # merge  configuration under &defaults with this endpoint
+    group: internal
+    url: {{ gatus.endpoints.internal_gatus }}
+  - name: Audiobookshelf
+    <<: *defaults # merge  configuration under &defaults with this endpoint
+    group: internal
+    url: {{ gatus.endpoints.audiobookshelf }}
+  - name: Joplin
+    <<: *defaults # merge  configuration under &defaults with this endpoint
+    group: internal
+    url: {{ gatus.endpoints.joplin }}
+  - name: Linkding
+    <<: *defaults # merge  configuration under &defaults with this endpoint
+    group: internal
+    url: {{ gatus.endpoints.linkding }}
+  - name: Seafile
+    <<: *defaults # merge  configuration under &defaults with this endpoint
+    group: internal
+    url: {{ gatus.endpoints.seafile }}
+  - name: Sftp
+    <<: *defaults # merge  configuration under &defaults with this endpoint
+    group: internal
+    url: {{ gatus.endpoints.sftp }}
+    conditions:
+      - "[CONNECTED] == true"
+      - "[RESPONSE_TIME] < 1500"

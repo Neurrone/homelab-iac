@@ -1,0 +1,76 @@
+services:
+  wireguard:
+    image: lscr.io/linuxserver/wireguard:1.0.20250521-r0-ls87
+    container_name: wireguard
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE #optional
+    dns:
+      - 1.1.1.1
+      - 1.0.0.1
+    environment:
+      - TZ={{ timezone }}
+    healthcheck:
+      test: ["CMD-SHELL", "curl --max-time  4.9 -s https://am.i.mullvad.net/connected | grep -q 'You are connected to Mullvad'"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 3s
+    networks:
+      - wireguard
+      - web
+    volumes:
+      - ./data/wireguard:/config
+      - /lib/modules:/lib/modules #seems to be needed for IPV6
+    ports:
+      # for socks server
+      - "8388:8388"
+      # for transmission
+      - 9091:9091
+      - 10508:10508
+      - 10508:10508/udp
+    sysctls:
+      - net.ipv4.conf.all.src_valid_mark=1
+    restart: unless-stopped
+  transmission:
+    image: lscr.io/linuxserver/transmission:4.0.6-r4-ls312
+    container_name: transmission
+    depends_on:
+      wireguard:
+        condition: service_healthy
+    environment:
+      - TZ={{ timezone }}
+      - PUID={{ media.puid}}
+      - PGID={{ media.pgid}}
+      - TRANSMISSION_WEB_HOME=/kettu/
+      - USER={{ transmission.user }}
+      - PASS={{ transmission.password }}
+    healthcheck:
+      test: ["CMD-SHELL", "curl --max-time  4.9 -f -u '{{ transmission.user }}:{{ transmission.password }}' -S -s -o /dev/null http://localhost:9091/transmission/web/"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 3s
+    network_mode: "service:wireguard"
+    restart: unless-stopped
+    volumes:
+      - {{ transmission.downloads_dir }}:/downloads
+      - ./data/transmission/config:/config
+  shadowsocks:
+    image: shadowsocks/shadowsocks-libev:latest
+    container_name: shadowsocks
+    depends_on:
+      wireguard:
+        condition: service_healthy
+    environment:
+      - TZ={{ timezone }}
+      - PASSWORD={{ shadowsocks.password }}
+      - SS_METHOD=table
+      - METHOD=aes-256-gcm
+    network_mode: "service:wireguard"
+    restart: unless-stopped
+
+networks:
+  wireguard:
+  web:
+    external: true

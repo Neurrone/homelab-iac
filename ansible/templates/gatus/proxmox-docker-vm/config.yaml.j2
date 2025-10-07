@@ -1,0 +1,63 @@
+storage:
+  type: sqlite
+  path: /data/data.db
+
+connectivity:
+  checker:
+    target: 1.1.1.1:53
+    interval: 30s
+
+alerting:
+  telegram:
+    id: {{ telegram.id }}
+    token: {{telegram.token}}
+
+ui:
+  title: "Internal instance ǀ Gatus"
+  description: "Status page for internal Gatus instance"
+
+default-endpoint: &defaults
+  interval: 30s
+  alerts:
+    - type: telegram
+      send-on-resolved: true
+  conditions:
+    - "[STATUS] == 200"
+    - "[RESPONSE_TIME] < 1500"
+  ui:
+    hide-conditions: true
+    hide-hostname: true
+    hide-url: true
+
+endpoints:
+  - name: Ddns-updater
+    <<: *defaults # merge  configuration under &defaults with this endpoint
+    group: internal
+    url: {{ gatus.endpoints.ddns_updater }}
+  - name: Externally hosted Gatus
+    <<: *defaults # merge  configuration under &defaults with this endpoint
+    group: external
+    url: {{ gatus.endpoints.external_gatus }}
+  - name: Glance
+    <<: *defaults # merge  configuration under &defaults with this endpoint
+    group: internal
+    url: {{ gatus.endpoints.glance }}
+  - name: Miniflux
+    <<: *defaults # merge  configuration under &defaults with this endpoint
+    group: external
+    url: {{ gatus.endpoints.miniflux }}
+  - name: Scrutiny
+    <<: *defaults # merge  configuration under &defaults with this endpoint
+    group: internal
+    url: {{ gatus.endpoints.scrutiny }}
+  - name: Website
+    <<: *defaults # merge  configuration under &defaults with this endpoint
+    group: external
+    url: "https://neurrone.com"
+  - name: Dns resolver
+    <<: *defaults # merge  configuration under &defaults with this endpoint
+    group: internal
+    url: {{ gatus.endpoints.dns_resolver }}
+    conditions:
+      - "[CONNECTED] == true"
+      - "[RESPONSE_TIME] < 100"

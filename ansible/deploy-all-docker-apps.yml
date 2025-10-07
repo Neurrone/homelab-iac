@@ -1,0 +1,24 @@
+---
+- name: Deploy All Docker Applications
+  hosts: docker_vms
+  become: yes
+  vars:
+    docker_apps:
+      - name: gatus
+        data_dirs:
+          - config
+          - db
+        config_files:
+          - src: config.yaml
+            dest: config/config.yaml
+  tasks:
+    - name: Deploy docker applications
+      include_role:
+        name: docker_app
+      vars:
+        app_name: "{{ item.name }}"
+        app_data_dirs: "{{ item.data_dirs | default([]) }}"
+        app_config_files: "{{ item.config_files | default([]) }}"
+      loop: "{{ docker_apps }}"
+      tags:
+        - "{{ item.name }}"
