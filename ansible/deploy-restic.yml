@@ -3,7 +3,7 @@
   hosts: proxmox
   become: true
   vars:
-    restic_version: "0.18.1"
+    restic_version: "0.19.1"
     restic_arch: "linux_amd64"
     restic_download_url: "https://github.com/restic/restic/releases/download/v{{ restic_version }}/restic_{{ restic_version }}_{{ restic_arch }}.bz2"
     restic_download_path: "/tmp/restic_{{ restic_version }}_{{ restic_arch }}.bz2"
