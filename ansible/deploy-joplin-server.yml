@@ -1,0 +1,12 @@
+---
+- name: Deploy Joplin server
+  hosts: proxmox_docker
+  become: true
+  roles:
+    - postgres_db
+    - docker_app
+  vars:
+    postgres_db_name: "{{ joplin.postgres.name }}"
+    postgres_db_user: "{{ joplin.postgres.user }}"
+    postgres_db_password: "{{ joplin.postgres.password }}"
+    docker_app_name: joplin-server

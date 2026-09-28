@@ -1,0 +1,11 @@
+---
+- name: Deploy Sftpgo
+  hosts: proxmox-docker-vm
+  become: true
+  roles:
+    - docker_app
+  vars:
+    docker_app_name: sftpgo
+    docker_app_data_dirs:
+      - data
+      - home

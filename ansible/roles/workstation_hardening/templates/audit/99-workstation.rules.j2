@@ -1,0 +1,13 @@
+# Managed by Ansible (workstation_hardening)
+-w /etc/ssh/ -p wa -k ssh-config
+-w /etc/sudoers -p wa -k sudoers
+-w /etc/sudoers.d/ -p wa -k sudoers
+-w /etc/passwd -p wa -k identity
+-w /etc/shadow -p wa -k identity
+-w /etc/group -p wa -k identity
+-w /etc/gshadow -p wa -k identity
+-w /usr/bin/passwd -p x -k identity-cmd
+-w /usr/sbin/usermod -p x -k identity-cmd
+-w /usr/sbin/groupmod -p x -k identity-cmd
+-w /usr/bin/chsh -p x -k identity-cmd
+-w /usr/bin/chfn -p x -k identity-cmd

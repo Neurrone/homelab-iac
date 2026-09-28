@@ -1,0 +1,9 @@
+---
+codex_prereq_packages:
+  - ca-certificates
+  - curl
+codex_volta_installer_url: "https://get.volta.sh"
+codex_volta_installer_path: /tmp/volta-install.sh
+codex_volta_binary_path: "/home/{{ ansible_user }}/.volta/bin/volta"
+codex_volta_node_version: "22"
+codex_binary_path: "/home/{{ ansible_user }}/.volta/bin/codex"

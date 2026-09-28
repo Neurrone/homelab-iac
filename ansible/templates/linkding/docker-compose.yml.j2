@@ -1,0 +1,60 @@
+services:
+  linkding:
+    image: ghcr.io/sissbruecker/linkding:1.47.0
+    container_name: linkding
+    environment:
+      TZ: "{{ timezone }}"
+      LD_DB_ENGINE: postgres
+      LD_DB_HOST: {{ postgres.host }}
+      LD_DB_DATABASE: {{ linkding.postgres.name }}
+      LD_DB_USER: {{ linkding.postgres.user }}
+      LD_DB_PASSWORD: {{ linkding.postgres.password }}
+      LD_CONTAINER_NAME: linkding
+      LD_HOST_DATA_DIR: "./data"
+      LD_SUPERUSER_NAME: {{ linkding.superuser.user }}
+      LD_SUPERUSER_PASSWORD: {{ linkding.superuser.password }}
+      LD_DISABLE_BACKGROUND_TASKS: false
+      LD_DISABLE_URL_VALIDATION: false
+      LD_ENABLE_AUTH_PROXY: false
+      # OIDC
+      LD_ENABLE_OIDC: true
+      OIDC_RP_CLIENT_ID: {{ linkding.oidc.client_id }}
+      OIDC_RP_CLIENT_SECRET: {{ linkding.oidc.client_secret }}
+      OIDC_RP_SIGN_ALGO: RS256
+      OIDC_OP_AUTHORIZATION_ENDPOINT: {{ pocketid.app_url }}/authorize
+      OIDC_OP_TOKEN_ENDPOINT: {{ pocketid.app_url }}/api/oidc/token
+      OIDC_OP_USER_ENDPOINT: {{ pocketid.app_url }}/api/oidc/userinfo
+      OIDC_OP_JWKS_ENDPOINT: {{ pocketid.app_url }}/.well-known/jwks.json
+      OIDC_USE_PKCE: true
+      OIDC_VERIFY_SSL: true
+      # Optional: Customize the username claim (defaults to email if not set)
+      OIDC_USERNAME_CLAIM: preferred_username
+    healthcheck:
+      test: ["CMD-SHELL", "curl --max-time  4.9 -s http://localhost:9090"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    labels:
+      traefik.enable: true
+      traefik.docker.network: web
+      traefik.http.routers.linkding.rule: Host(`{{ traefik.hosts.linkding }}`)
+      traefik.http.routers.linkding.entrypoints: websecure
+      traefik.http.routers.linkding.middlewares: chain-no-auth-without-rate-limit@file
+      # TLS stuff
+      traefik.http.routers.linkding.tls: true
+      traefik.http.routers.linkding.tls.certresolver: letsencrypt
+      traefik.http.services.linkding.loadbalancer.server.port: 9090
+    networks:
+      - postgres_shared
+      - web
+    restart: unless-stopped
+    user: "1000:1000"
+    volumes:
+      - ./data:/etc/linkding/data
+
+networks:
+  postgres_shared:
+    external: true
+  web:
+    external: true

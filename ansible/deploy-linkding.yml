@@ -1,0 +1,12 @@
+---
+- name: Deploy Linkding
+  hosts: proxmox_docker
+  become: true
+  roles:
+    - postgres_db
+    - docker_app
+  vars:
+    postgres_db_name: "{{ linkding.postgres.name }}"
+    postgres_db_user: "{{ linkding.postgres.user }}"
+    postgres_db_password: "{{ linkding.postgres.password }}"
+    docker_app_name: linkding

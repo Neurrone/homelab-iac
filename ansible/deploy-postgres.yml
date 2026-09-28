@@ -1,0 +1,8 @@
+---
+- name: Deploy Centralized PostgreSQL Database
+  hosts: proxmox_docker
+  become: true
+  roles:
+    - docker_app
+  vars:
+    docker_app_name: postgres

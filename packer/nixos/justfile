@@ -1,0 +1,26 @@
+set shell := ["bash", "-euo", "pipefail", "-c"]
+
+# secrets.sops.json should define PKR_VAR_* entries, for example:
+# PKR_VAR_proxmox_url, PKR_VAR_proxmox_username, PKR_VAR_proxmox_password
+# PKR_VAR_ssh_password
+sops_env_file := "../secrets.sops.json"
+
+default:
+  @just --list
+
+init:
+  packer init .
+
+fmt:
+  packer fmt -recursive .
+
+fmt-check:
+  packer fmt -check -recursive .
+
+validate env_file=sops_env_file:
+  test -f {{env_file}}
+  sops exec-env {{env_file}} 'packer validate .'
+
+build env_file=sops_env_file:
+  test -f {{env_file}}
+  sops exec-env {{env_file}} 'packer build .'

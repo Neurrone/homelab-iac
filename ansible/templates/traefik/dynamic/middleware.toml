@@ -1,0 +1,31 @@
+[http.middlewares]
+  [http.middlewares.basic-auth]
+    [http.middlewares.basic-auth.basicAuth]
+      realm = "Traefik2 Basic Auth"
+      usersFile = "/shared/.htpasswd"
+  
+  [http.middlewares.compress.compress]
+  
+  [http.middlewares.rate-limit]
+    [http.middlewares.rate-limit.rateLimit]
+      average = 50
+      burst = 200
+  
+  [http.middlewares.security-headers]
+    [http.middlewares.security-headers.headers]
+      stsSeconds = 31536000
+      stsPreload = true
+      forceSTSHeader = true
+      browserXssFilter = true
+      contentTypeNosniff = true
+      customFrameOptionsValue = "SAMEORIGIN"
+      contentSecurityPolicy = "frame-ancestors 'self'; object-src 'none'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com https://unpkg.com https://*.neurrone.com"
+      permissionsPolicy = "accelerometer 'none'; ambient-light-sensor 'none'; autoplay 'none'; battery 'none'; camera 'none'; display-capture 'none'; document-domain 'none'; geolocation 'none'; gyroscope 'none'; layout-animations 'none'; magnetometer 'none'; microphone 'none'; payment 'none'; usb 'none'; vr 'none'; wake-lock 'none'; xr-spatial-tracking 'none'"
+      referrerPolicy = "same-origin"
+
+      # Prevent leakage of info from the server
+      [http.middlewares.security-headers.headers.customResponseHeaders]
+        powered-by = ""
+        x-powered-by = ""
+        server = ""
+        x-server = ""

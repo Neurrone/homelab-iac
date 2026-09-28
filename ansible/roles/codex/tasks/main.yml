@@ -1,0 +1,60 @@
+---
+- name: Check whether Codex CLI is installed
+  ansible.builtin.stat:
+    path: "{{ codex_binary_path }}"
+  become: false
+  register: codex_binary
+
+- name: Check whether Volta is installed
+  ansible.builtin.stat:
+    path: "{{ codex_volta_binary_path }}"
+  become: false
+  register: codex_volta_binary
+
+- name: Install Codex CLI and prerequisites
+  when: not codex_binary.stat.exists
+  block:
+    - name: Install Codex prerequisites
+      ansible.builtin.apt:
+        name: "{{ codex_prereq_packages }}"
+        state: present
+        update_cache: true
+        cache_valid_time: 3600
+    - name: Download Volta installer
+      ansible.builtin.get_url:
+        url: "{{ codex_volta_installer_url }}"
+        dest: "{{ codex_volta_installer_path }}"
+        mode: "0755"
+      become: false
+      when: not codex_volta_binary.stat.exists
+    - name: Install Volta
+      ansible.builtin.command:
+        argv:
+          - /bin/bash
+          - "{{ codex_volta_installer_path }}"
+      become: false
+      changed_when: true
+      when: not codex_volta_binary.stat.exists
+    - name: Install default Node.js runtime with Volta
+      ansible.builtin.command:
+        argv:
+          - "{{ codex_volta_binary_path }}"
+          - install
+          - "node@{{ codex_volta_node_version }}"
+      become: false
+      changed_when: true
+    - name: Install Codex CLI package with Volta
+      ansible.builtin.command:
+        argv:
+          - "{{ codex_volta_binary_path }}"
+          - install
+          - "@openai/codex"
+      become: false
+      changed_when: true
+- name: Verify Codex CLI installation
+  ansible.builtin.command:
+    argv:
+      - "{{ codex_binary_path }}"
+      - --version
+  become: false
+  changed_when: false

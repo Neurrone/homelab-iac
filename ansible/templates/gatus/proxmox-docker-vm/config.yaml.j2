@@ -23,7 +23,7 @@ default-endpoint: &defaults
       send-on-resolved: true
   conditions:
     - "[STATUS] == 200"
-    - "[RESPONSE_TIME] < 1500"
+    - "[RESPONSE_TIME] < 5000"
   ui:
     hide-conditions: true
     hide-hostname: true
@@ -61,3 +61,7 @@ endpoints:
     conditions:
       - "[CONNECTED] == true"
       - "[RESPONSE_TIME] < 100"
+  - name: Google
+    <<: *defaults # merge  configuration under &defaults with this endpoint
+    group: external
+    url: https://google.com

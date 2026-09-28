@@ -1,0 +1,35 @@
+services:
+  sftpgo:
+    image: ghcr.io/drakkan/sftpgo:v2.7.6
+    container_name: sftpgo
+    environment:
+      - TIME_ZONE={{ timezone }}
+      - SFTPGO_GRACE_TIME=10
+      - SFTPGO_COMMON__UPLOAD_MODE=2
+      # - SFTPGO_COMMON__DEFENDER__ENABLED=true
+    healthcheck:
+      test: ["CMD", "sftpgo", "ping"]
+      start_period: 5s
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    labels:
+      traefik.enable: true
+      traefik.tcp.routers.sftp.rule: "HostSNI(`*`)"
+      traefik.tcp.routers.sftp.entrypoints: "websecure"
+      traefik.tcp.routers.sftp.service: "sftp"
+      traefik.tcp.services.sftp.loadbalancer.server.port: 2022
+    networks:
+      - web
+    ports:
+      - 2022:2022
+      # don't expose the http interface unless you need to manage users
+      # - 2080:8080
+    restart: unless-stopped
+    volumes:
+      - ./data/data:/srv/sftpgo
+      - ./data/home:/var/lib/sftpgo
+
+networks:
+  web:
+    external: true

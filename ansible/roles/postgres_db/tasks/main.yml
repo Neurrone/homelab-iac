@@ -1,0 +1,53 @@
+---
+# needed to manage Postgres
+- name: Install psycopg2 for PostgreSQL management
+  ansible.builtin.apt:
+    name: python3-psycopg2
+    state: present
+- name: Provision PostgreSQL database and user
+  vars:
+    postgres_login_host: localhost
+    postgres_login_port: "{{ postgres.port }}"
+    postgres_login_user: postgres
+    postgres_login_password: "{{ postgres.root_password }}"
+  block:
+    - name: "Create PostgreSQL database"
+      community.postgresql.postgresql_db:
+        name: "{{ postgres_db_name }}"
+        login_host: "{{ postgres_login_host }}"
+        login_port: "{{ postgres_login_port }}"
+        login_user: "{{ postgres_login_user }}"
+        login_password: "{{ postgres_login_password }}"
+        state: present
+    - name: "Create user"
+      community.postgresql.postgresql_user:
+        name: "{{ postgres_db_user }}"
+        password: "{{ postgres_db_password }}"
+        login_host: "{{ postgres_login_host }}"
+        login_port: "{{ postgres_login_port }}"
+        login_user: "{{ postgres_login_user }}"
+        login_password: "{{ postgres_login_password }}"
+        state: present
+    - name: "Grant privileges on database to user"
+      community.postgresql.postgresql_privs:
+        login_db: "{{ postgres_db_name }}"
+        roles: "{{ postgres_db_user }}"
+        privs: ALL
+        type: database
+        login_host: "{{ postgres_login_host }}"
+        login_port: "{{ postgres_login_port }}"
+        login_user: "{{ postgres_login_user }}"
+        login_password: "{{ postgres_login_password }}"
+        state: present
+    - name: "Grant privileges on schema public to user"
+      community.postgresql.postgresql_privs:
+        login_db: "{{ postgres_db_name }}"
+        roles: "{{ postgres_db_user }}"
+        privs: ALL
+        type: schema
+        objs: public
+        login_host: "{{ postgres_login_host }}"
+        login_port: "{{ postgres_login_port }}"
+        login_user: "{{ postgres_login_user }}"
+        login_password: "{{ postgres_login_password }}"
+        state: present

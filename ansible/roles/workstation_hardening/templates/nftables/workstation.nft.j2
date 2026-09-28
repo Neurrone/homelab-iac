@@ -1,0 +1,40 @@
+#!/usr/sbin/nft -f
+# Managed by Ansible (workstation_hardening)
+
+flush ruleset
+
+table inet filter {
+  chain input {
+    type filter hook input priority 0;
+    policy drop;
+
+    iif lo accept
+    ct state invalid drop
+    ct state established,related accept
+
+{% if workstation_hardening_allow_icmp %}
+    ip protocol icmp accept
+    ip6 nexthdr ipv6-icmp accept
+{% endif %}
+
+{% for cidr in workstation_hardening_ssh_allowed_cidrs %}
+    ip saddr {{ cidr }} tcp dport 22 ct state new accept
+{% endfor %}
+
+{% for port in workstation_hardening_additional_allowed_tcp_ports %}
+{% for cidr in workstation_hardening_ssh_allowed_cidrs %}
+    ip saddr {{ cidr }} tcp dport {{ port }} ct state new accept
+{% endfor %}
+{% endfor %}
+  }
+
+  chain forward {
+    type filter hook forward priority 0;
+    policy drop;
+  }
+
+  chain output {
+    type filter hook output priority 0;
+    policy accept;
+  }
+}

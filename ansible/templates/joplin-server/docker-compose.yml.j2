@@ -1,0 +1,35 @@
+services:
+  joplin:
+    image: joplin/server:3.5.2
+    container_name: 'joplin-server'
+    environment:
+      TZ: "{{ timezone }}"
+      APP_PORT: 22300
+      APP_BASE_URL: {{ joplin.app_url }}
+      DB_CLIENT: pg
+      POSTGRES_HOST: {{ postgres.host }}
+      POSTGRES_DATABASE: {{ joplin.postgres.name }}
+      POSTGRES_PORT: {{ postgres.port }}
+      POSTGRES_USER: {{ joplin.postgres.user }}
+      POSTGRES_PASSWORD: {{ joplin.postgres.password }}
+    # TODO: healthcheck
+    labels:
+      traefik.enable: true
+      traefik.docker.network: web
+      traefik.http.routers.joplin.rule: Host(`{{ traefik.hosts.joplin }}`)
+      traefik.http.routers.joplin.entrypoints: websecure
+      traefik.http.routers.joplin.middlewares: chain-no-auth-without-rate-limit@file
+      # TLS stuff
+      traefik.http.routers.joplin.tls: true
+      traefik.http.routers.joplin.tls.certresolver: letsencrypt
+      traefik.http.services.joplin.loadbalancer.server.port: 22300
+    networks:
+      - postgres_shared
+      - web
+    restart: unless-stopped
+
+networks:
+  postgres_shared:
+    external: true
+  web:
+    external: true

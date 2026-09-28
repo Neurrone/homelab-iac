@@ -1,12 +1,12 @@
 ---
 - name: Deploy Transmission
   hosts: proxmox-docker-vm
-  become: yes
+  become: true
   roles:
     - docker_app
   vars:
-    app_name: transmission
-    app_data_dirs:
+    docker_app_name: transmission
+    docker_app_data_dirs:
       - wireguard
       # skipping transmission/config because I need to set a different user/group owner
       # - transmission/config

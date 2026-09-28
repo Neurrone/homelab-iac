@@ -1,0 +1,50 @@
+# Copy this file to terraform.tfvars and fill in real values.
+
+proxmox_insecure  = true
+proxmox_node_name = "proxmox"
+
+# Required: SOPS-encrypted file with proxmox_endpoint and auth values.
+proxmox_sops_file = "secrets.sops.json"
+
+# Set state_encryption_passphrase via environment variable:
+# TF_VAR_state_encryption_passphrase (for example using sops exec-env with ../../tofu.env.sops.json).
+
+template_vm_id         = 101
+storage_pool           = "Optane"
+cloudinit_storage_pool = "Optane"
+root_disk_interface    = "virtio0"
+default_network_bridge = "vmbr0"
+
+vms = {
+  workstation-01 = {
+    vm_id = 9001
+
+    # One or more SSH public keys to inject via cloud-init.
+    ssh_public_key_paths = [
+      "~/.ssh/id_ed25519.pub"
+      # "~/.ssh/work.pub"
+    ]
+
+    cpu_cores = 8
+
+    # Ballooning: start around memory_min_mb, can grow to memory_max_mb.
+    memory_min_mb = 4096
+    memory_max_mb = 16384
+
+    disk_size_gb = 100
+    # Static example:
+    # ipv4_address = "192.168.2.170/24"
+    # ipv4_gateway = "192.168.2.1"
+    ipv4_address    = "dhcp"
+    start_on_create = true
+  }
+
+  # Add another VM by adding another entry, for example:
+  # workstation-02 = {
+  #   vm_id = 9002
+  #   ssh_public_key_paths = ["~/.ssh/id_ed25519.pub", "~/.ssh/work.pub"]
+  #   memory_min_mb = 4096
+  #   memory_max_mb = 8192
+  #   disk_size_gb  = 120
+  # }
+}

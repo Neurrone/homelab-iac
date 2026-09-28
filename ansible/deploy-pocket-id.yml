@@ -1,0 +1,12 @@
+---
+- name: Deploy pocket-id Container
+  hosts: proxmox_docker
+  become: true
+  roles:
+    - postgres_db
+    - docker_app
+  vars:
+    postgres_db_name: "{{ pocketid.postgres.name }}"
+    postgres_db_user: "{{ pocketid.postgres.user }}"
+    postgres_db_password: "{{ pocketid.postgres.password }}"
+    docker_app_name: pocket-id

@@ -1,14 +1,14 @@
 ---
 - name: Deploy Gatus Container
   hosts: docker_vms
-  become: yes
+  become: true
   roles:
     - docker_app
   vars:
-    app_name: gatus
-    app_data_dirs:
+    docker_app_name: gatus
+    docker_app_data_dirs:
       - config
       - db
-    app_config_templates:
+    docker_app_config_templates:
       - src: "{{ inventory_hostname }}/config.yaml.j2"
         dest: config/config.yaml

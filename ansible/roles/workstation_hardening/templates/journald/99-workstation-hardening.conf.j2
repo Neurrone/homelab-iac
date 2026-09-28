@@ -1,0 +1,6 @@
+# Managed by Ansible (workstation_hardening)
+[Journal]
+Storage=persistent
+SystemMaxUse={{ workstation_hardening_journald_system_max_use }}
+RuntimeMaxUse={{ workstation_hardening_journald_runtime_max_use }}
+MaxFileSec={{ workstation_hardening_journald_max_file_sec }}

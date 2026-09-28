@@ -1,23 +1,38 @@
+---
 ansible_host: ENC[AES256_GCM,data:4PiX8WFQ,iv:LA7UOcSu/ljhRA72ZCDgGeLHrE+h9i3hxffPj43b7tk=,tag:pqws2HPlRGBm/Z/TiZWmDw==,type:str]
 ansible_user: ENC[AES256_GCM,data:0JOCTEc+yw==,iv:4TEB8CjRzr10Y5WFS+l/8Mvrs3z7ypMcJo6YUIudAy0=,tag:emBRJNFJZLBCWYAGH0bjeQ==,type:str]
 ansible_become_password: ENC[AES256_GCM,data:j9QuZQT2bUvEp8qfMCI68AKU3T0=,iv:r8WS90QtdKnFNEa8q8q/PMDL+MILJYqy7Xk1HOcNdvk=,tag:fkN1RYxc4os0DiiYtRFfwA==,type:str]
 ansible_ssh_private_key_file: ENC[AES256_GCM,data:WFbEuuA4mRJm+rIASTc=,iv:iQqmAwOf4P7Ks8VtZ3WQ2wqQTxDJH8dj38kqxWgc+Zo=,tag:onpbWVI1FqRSrCw5t83m3A==,type:str]
-docker_base_path: ENC[AES256_GCM,data:6Nenwi0j3E7Kl/qZJN6RtPj/R/VVVAmOUBeL,iv:3Yy0BsWNwqoOCWiO2ZpnYD1xMQK7HFoFHz7Z0MzhfVo=,tag:jVpinT7+yrwVh2bav2ejMg==,type:str]
+docker_base_path:
+  ENC[AES256_GCM,data:6Nenwi0j3E7Kl/qZJN6RtPj/R/VVVAmOUBeL,iv:3Yy0BsWNwqoOCWiO2ZpnYD1xMQK7HFoFHz7Z0MzhfVo=,tag:jVpinT7+yrwVh2bav2ejMg==,type:str]
+email: ENC[AES256_GCM,data:AxManEV7jo6dQEpLGx+kEPIaZydBWjzhWb8=,iv:acUkIKSfWlKSPDdR2kaTqV1XEGg/LAiPDjY7h8JrXrk=,tag:JfL+R5EuS/pDydqBpb6P1w==,type:str]
+miniflux:
+  postgres:
+    name: ENC[AES256_GCM,data:AGyIed6w5Is=,iv:UkYEU8CJA/2UG0s41zgGXc4a6Z9GyAHcFw66YMvYYBI=,tag:gBs/0e687iZq3tNWiu5wTA==,type:str]
+    user: ENC[AES256_GCM,data:pYfOlX8fzW4=,iv:zqNH2qbIMQA1q+58Lt9oLZIM5xzHLPzLsg5p4hzB3ag=,tag:BLOdgioD4aUdZyUUzVopFA==,type:str]
+    password: ENC[AES256_GCM,data:/GM6hsRwtZ5EAAOHc3COI3aEguo=,iv:QwEXv/d6g7LGPT6bYAN3BbXhViBGrMLqDwcbvRg+01A=,tag:kb1Muk1xzcMYspZZUGB87w==,type:str]
 traefik:
-    hosts:
-        gatus: ENC[AES256_GCM,data:9zannaIl48Q7HVxWVocWs1T+O+U=,iv:/gahbgQvEVOwVnsQnL33r/iIAUqiyHjlKUwESl0L+hg=,tag:rViRMLpIaacfN2ccuBL9pA==,type:str]
+  http_port: ENC[AES256_GCM,data:9NA=,iv:PRK4ISgfhjRxbwotDI1d83biPU63PpSA59tS0OGINYo=,tag:rwxpeAHdqrdlqI1p6p3Mqg==,type:int]
+  https_port: ENC[AES256_GCM,data:PLwF,iv:QR/SJ78xfAotrCF8/LIdB1PhqaCymgZpCpVvPOdt/hE=,tag:5jVOy4SbrzBmt/T64vmcSA==,type:int]
+  user: ENC[AES256_GCM,data:A53xEirXGA==,iv:mMZFaAKWdxyA4Eh2LfhkXCIRpcyxZArBhBZPCxDl1vQ=,tag:OA6if2Xzt4FX4m7iVO/Rcg==,type:str]
+  password:
+    ENC[AES256_GCM,data:fYYs87pciqgG8mNT4YeKVU0CVu2tKuG/8RCduM1cdAH0U8Hk3Q==,iv:Q/OBgqzaELmLXYsEG7QlHMttU1QBl/fNzUkYLIRT1yQ=,tag:zvnfteynvZcZ5hLJsL/liA==,type:str]
+  hosts:
+    gatus: ENC[AES256_GCM,data:9zannaIl48Q7HVxWVocWs1T+O+U=,iv:/gahbgQvEVOwVnsQnL33r/iIAUqiyHjlKUwESl0L+hg=,tag:rViRMLpIaacfN2ccuBL9pA==,type:str]
+    miniflux: ENC[AES256_GCM,data:pt+rNEsb5TrWldavmBxZW5h5NneQ,iv:yPzQoV8aF6satEUiBG7oEJyZTZFoNVhWaqppeCe6bDM=,tag:eY2tnO8ydk/ybROa9H7S9w==,type:str]
 sops:
-    age:
-        - recipient: age1q3zmnary3fk6tx2ay9k5l5nqff65aaz49js3el8s0ggxrualp47qvll8un
-          enc: |
-            -----BEGIN AGE ENCRYPTED FILE-----
-            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSAyOWRFREFUNjltUkFPSVJr
-            RVVwTUczdDU4Z1FzdTVTak92Q3JIK3prR1I0CkZaek44eDRuYmJYQlNMUVIxa01N
-            YjQ2Q3BBS0NxK1c4OWtab2U5ZWRtSEEKLS0tIGt1UWNUYys4QVQ3R1MwK1QrbjBl
-            SGVXWC8rQ3psOThUZFVFYUdLNUwzNkkKYtw96AqgnZ8Ow9XutLbEpXLe5ZXycvD/
-            u2+mkrjACLyT8WEXXdhjGdothqWAiwO68lClDFEgyGovPIKOdrdaZw==
-            -----END AGE ENCRYPTED FILE-----
-    lastmodified: "2025-10-05T10:39:15Z"
-    mac: ENC[AES256_GCM,data:dF04wuDV78q1XIXa1zfADE2YjGgCsAADU+nvz7mOJIrylB7n8g3N7MnVI4ktGIWqufCgj8iUcEkjVL2BCQkLV9CFADgJ36DEmfixQ/idG9c7AvCxnfCJeKhkvVWHXxDEQ/jDvrMdhurVa1GO0N0vNjISa1ZZNOB8MIZZhW7vxfk=,iv:W4zI1WhURd76RDBOrMB94C+OmMcuzV+DTlgGK+674TQ=,tag:l1zFM0odBJVn1q07WyzdBg==,type:str]
-    unencrypted_suffix: _unencrypted
-    version: 3.11.0
+  age:
+    - recipient: age1q3zmnary3fk6tx2ay9k5l5nqff65aaz49js3el8s0ggxrualp47qvll8un
+      enc: |
+        -----BEGIN AGE ENCRYPTED FILE-----
+        YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSAyOWRFREFUNjltUkFPSVJr
+        RVVwTUczdDU4Z1FzdTVTak92Q3JIK3prR1I0CkZaek44eDRuYmJYQlNMUVIxa01N
+        YjQ2Q3BBS0NxK1c4OWtab2U5ZWRtSEEKLS0tIGt1UWNUYys4QVQ3R1MwK1QrbjBl
+        SGVXWC8rQ3psOThUZFVFYUdLNUwzNkkKYtw96AqgnZ8Ow9XutLbEpXLe5ZXycvD/
+        u2+mkrjACLyT8WEXXdhjGdothqWAiwO68lClDFEgyGovPIKOdrdaZw==
+        -----END AGE ENCRYPTED FILE-----
+  lastmodified: "2025-12-02T15:40:20Z"
+  mac:
+    ENC[AES256_GCM,data:Leg3FsLi2IhxCiU4BKI0bBmKJAFImc4QwmqwL1Xu1nn9/t68Y7QjrvQp9ji3og1ckoYNjwJB8UaM2h1Z7Sr1pv798yqgG9WKsgnJIi1RhG7ozX7AxF/8PQL4B/sms3SRUyBIS/4G2PE2CzteRdpBvAhk3A6GXycbNiigIYLkSmw=,iv:0VniLU2Op699qKRrffY0VqzAtjWQAXK0/9kQ3KSx7u8=,tag:xlDq3C8LgjzKO3D5/xYq+Q==,type:str]
+  unencrypted_suffix: _unencrypted
+  version: 3.11.0

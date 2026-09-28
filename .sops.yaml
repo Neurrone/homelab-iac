@@ -1,3 +1,4 @@
+---
 creation_rules:
-  - path_regex: \.(yml|yaml)$
+  - path_regex: \.(yml|yaml|json)$
     age: age1q3zmnary3fk6tx2ay9k5l5nqff65aaz49js3el8s0ggxrualp47qvll8un

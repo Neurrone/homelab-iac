@@ -1,0 +1,38 @@
+services:
+  audiobookshelf:
+    image: ghcr.io/advplyr/audiobookshelf:2.36.1
+    container_name: audiobookshelf
+    environment:
+      - TZ={{ timezone }}
+      - PUID={{ media.puid}}
+      - PGID={{ media.pgid}}
+    healthcheck:
+      test: ["CMD-SHELL", "wget --quiet --tries=1 --timeout=5 http://localhost:80/ping -O /dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    labels:
+      traefik.enable: true
+      traefik.http.routers.audiobookshelf.rule: Host(`{{ traefik.hosts.audiobookshelf }}`)
+      traefik.http.routers.audiobookshelf.entrypoints: websecure
+      traefik.http.routers.audiobookshelf.middlewares: chain-no-auth-without-rate-limit@file
+      # TLS stuff
+      traefik.http.routers.audiobookshelf.tls: true
+      traefik.http.routers.audiobookshelf.tls.certresolver: letsencrypt
+      traefik.http.services.audiobookshelf.loadbalancer.server.port: 80
+      traefik.docker.network: web
+      traefik.http.services.audiobookshelf.loadbalancer.passHostHeader: true
+    networks:
+      - web
+    restart: unless-stopped
+    user: {{ media.puid}}:{{ media.pgid}}
+    volumes:
+      - ./data/config:/config
+      - ./data/metadata:/metadata
+      - {{ media.audiobooks_dir }}:/audiobooks:ro
+      - {{ media.podcasts_dir }}:/podcasts
+
+networks:
+  web:
+    external: true

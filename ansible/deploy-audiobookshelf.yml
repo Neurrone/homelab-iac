@@ -1,0 +1,13 @@
+---
+- name: Deploy Audiobookshelf
+  hosts: proxmox-docker-vm
+  become: true
+  roles:
+    - docker_app
+  vars:
+    docker_app_name: audiobookshelf
+    docker_app_owner: "{{ media.puid }}"
+    docker_app_group: "{{ media.pgid }}"
+    docker_app_data_dirs:
+      - config
+      - metadata

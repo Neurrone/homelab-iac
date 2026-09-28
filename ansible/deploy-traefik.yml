@@ -1,0 +1,23 @@
+---
+- name: Deploy Traefik Container
+  hosts: docker_vms
+  become: true
+  roles:
+    - docker_app
+  vars:
+    docker_app_name: traefik
+    docker_app_data_dirs:
+      - dynamic
+      - logs
+      - shared
+    docker_app_config_templates:
+      - src: dynamic/default.toml
+        dest: dynamic/default.toml
+      - src: dynamic/middleware-chains.toml
+        dest: dynamic/middleware-chains.toml
+      - src: dynamic/middleware.toml
+        dest: dynamic/middleware.toml
+      - src: traefik.toml.j2
+        dest: traefik.toml
+      - src: .htpasswd.j2
+        dest: shared/.htpasswd

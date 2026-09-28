@@ -1,6 +1,6 @@
 services:
   wireguard:
-    image: lscr.io/linuxserver/wireguard:1.0.20250521-r0-ls87
+    image: lscr.io/linuxserver/wireguard:1.0.20260223-r0-ls123
     container_name: wireguard
     cap_add:
       - NET_ADMIN
@@ -33,7 +33,7 @@ services:
       - net.ipv4.conf.all.src_valid_mark=1
     restart: unless-stopped
   transmission:
-    image: lscr.io/linuxserver/transmission:4.0.6-r4-ls312
+    image: lscr.io/linuxserver/transmission:4.0.6-r6-ls326
     container_name: transmission
     depends_on:
       wireguard:

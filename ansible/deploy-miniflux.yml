@@ -1,0 +1,8 @@
+---
+- name: Deploy Miniflux Container
+  hosts: linode-docker-vm
+  become: true
+  roles:
+    - docker_app
+  vars:
+    docker_app_name: miniflux

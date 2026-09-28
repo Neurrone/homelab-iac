@@ -1,0 +1,57 @@
+services:
+  cloudflared:
+    container_name: cloudflared
+    # https://hub.docker.com/r/cloudflare/cloudflared/tags
+    image: cloudflare/cloudflared:2026.1.2
+    command: proxy-dns
+    environment:
+      # use cloudflare and quad 9's DNS resolvers
+      - "TUNNEL_DNS_UPSTREAM=https://1.1.1.1/dns-query,https://1.0.0.1/dns-query,https://9.9.9.9/dns-query,https://149.112.112.9/dns-query"
+      # Listen on an unprivileged port
+      - "TUNNEL_DNS_PORT=5053"
+      # Listen on all interfaces
+      - "TUNNEL_DNS_ADDRESS=0.0.0.0"
+    # Attach cloudflared only to the private network
+    networks:
+      internal:
+        ipv4_address: 172.30.9.2
+    restart: unless-stopped
+  pihole:
+    container_name: pihole
+    image: pihole/pihole:2026.09.0
+    depends_on:
+      - cloudflared
+    environment:
+      - FTLCONF_dns_listeningMode=all
+      # FTLCONF_misc_etc_dnsmasq_d: 'true'
+      - ServerIP=192.168.2.162
+      - TZ={{ timezone }}
+      - FTLCONF_webserver_api_password={{ pihole.password }}
+      - DNS1="172.30.9.2#5053"
+      - DNS2="no"
+    hostname: pihole
+    networks:
+      internal:
+        ipv4_address: 172.30.9.3
+    # For DHCP it is recommended to remove these ports and instead add: network_mode: "host"
+    ports:
+      - "53:53/tcp"
+      - "53:53/udp"
+      - "67:67/udp"
+      - "8000:80/tcp"
+      - "8001:443/tcp"
+    restart: unless-stopped
+    volumes:
+      - './data:/etc/pihole/'
+      # - './var-log/pihole.log:/var/log/pihole.log'
+    # Recommended but not required (DHCP needs NET_ADMIN)
+    #   https://github.com/pi-hole/docker-pi-hole#note-on-capabilities
+    # cap_add:
+      # - NET_ADMIN
+
+networks:
+  # for communication with cloudflared
+  internal:
+    ipam:
+      config:
+        - subnet: 172.30.9.0/29

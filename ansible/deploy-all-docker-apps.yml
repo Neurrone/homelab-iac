@@ -1,7 +1,7 @@
 ---
 - name: Deploy All Docker Applications
   hosts: docker_vms
-  become: yes
+  become: true
   vars:
     docker_apps:
       - name: gatus
@@ -11,14 +11,30 @@
         config_files:
           - src: config.yaml
             dest: config/config.yaml
+      - name: pocket-id
+        app_name: pocketid
+        data_dirs:
+          - pocket-id
   tasks:
+    - name: Provision PostgreSQL database for apps that need it
+      ansible.builtin.include_role:
+        name: postgres_db
+      vars:
+        postgres_db_name: "{{ vars[item.app_name].postgres.name }}"
+        postgres_db_user: "{{ vars[item.app_name].postgres.user }}"
+        postgres_db_password: "{{ vars[item.app_name].postgres.password }}"
+      loop: "{{ docker_apps }}"
+      when: item.app_name is defined
+      tags:
+        - "{{ item.name }}"
+
     - name: Deploy docker applications
-      include_role:
+      ansible.builtin.include_role:
         name: docker_app
       vars:
-        app_name: "{{ item.name }}"
-        app_data_dirs: "{{ item.data_dirs | default([]) }}"
-        app_config_files: "{{ item.config_files | default([]) }}"
+        docker_app_name: "{{ item.name }}"
+        docker_app_data_dirs: "{{ item.data_dirs | default([]) }}"
+        docker_app_config_files: "{{ item.config_files | default([]) }}"
       loop: "{{ docker_apps }}"
       tags:
         - "{{ item.name }}"

@@ -1,0 +1,36 @@
+---
+- name: Check whether Claude Code is installed
+  ansible.builtin.stat:
+    path: "{{ claude_code_binary_path }}"
+  become: false
+  register: claude_code_binary
+- name: Install Claude Code and prerequisites
+  when: not claude_code_binary.stat.exists
+  block:
+    - name: Install Claude Code prerequisites
+      ansible.builtin.apt:
+        name: "{{ claude_code_prereq_packages }}"
+        state: present
+        update_cache: true
+        cache_valid_time: 3600
+    - name: Download Claude Code installer
+      ansible.builtin.get_url:
+        url: "{{ claude_code_installer_url }}"
+        dest: "{{ claude_code_installer_path }}"
+        mode: "0755"
+      become: false
+    - name: Install Claude Code
+      ansible.builtin.command:
+        argv:
+          - /bin/bash
+          - "{{ claude_code_installer_path }}"
+          - "{{ claude_code_version }}"
+      become: false
+      changed_when: true
+- name: Verify Claude Code installation
+  ansible.builtin.command:
+    argv:
+      - "{{ claude_code_binary_path }}"
+      - --version
+  become: false
+  changed_when: false

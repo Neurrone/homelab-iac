@@ -1,6 +1,6 @@
 services:
   gatus:
-    image: ghcr.io/twin/gatus:v5.26.0
+    image: ghcr.io/twin/gatus:v5.37.0
     container_name: gatus
     environment:
       - TZ={{ timezone }}
@@ -17,8 +17,8 @@ services:
     networks:
       - gatus
       - web
-    ports:
-      - "8090:8080"
+    # ports:
+      # - "8090:8080"
     restart: unless-stopped
     volumes:
       - ./data/config:/config:ro

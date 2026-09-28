@@ -1,0 +1,279 @@
+---
+- name: Install workstation hardening packages
+  ansible.builtin.apt:
+    name:
+      - nftables
+      - unattended-upgrades
+      - needrestart
+      - auditd
+      - apparmor
+      - apparmor-utils
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Ensure sshd drop-in directory exists
+  ansible.builtin.file:
+    path: /etc/ssh/sshd_config.d
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Deploy SSH hardening config
+  ansible.builtin.template:
+    src: sshd/99-workstation-hardening.conf.j2
+    dest: /etc/ssh/sshd_config.d/99-workstation-hardening.conf
+    owner: root
+    group: root
+    mode: "0644"
+    validate: /usr/sbin/sshd -t -f %s
+  notify: Reload ssh
+
+- name: Validate full sshd configuration
+  ansible.builtin.command:
+    argv:
+      - /usr/sbin/sshd
+      - -t
+  changed_when: false
+
+- name: Lock root account
+  ansible.builtin.command:
+    argv:
+      - passwd
+      - -l
+      - root
+  register: workstation_hardening_lock_root
+  changed_when: "'password changed' in workstation_hardening_lock_root.stdout.lower()"
+
+- name: Configure nftables ruleset
+  when: workstation_hardening_enable_guest_firewall
+  ansible.builtin.template:
+    src: nftables/workstation.nft.j2
+    dest: /etc/nftables.conf
+    owner: root
+    group: root
+    mode: "0644"
+    validate: /usr/sbin/nft -c -f %s
+  notify: Restart nftables
+
+- name: Ensure nftables service is enabled and running
+  when: workstation_hardening_enable_guest_firewall
+  ansible.builtin.service:
+    name: nftables
+    enabled: true
+    state: started
+
+- name: Configure unattended upgrades auto-upgrades file
+  when: workstation_hardening_enable_unattended_upgrades
+  ansible.builtin.copy:
+    dest: /etc/apt/apt.conf.d/20auto-upgrades
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      APT::Periodic::Update-Package-Lists "1";
+      APT::Periodic::Unattended-Upgrade "1";
+
+- name: Configure unattended upgrades local settings
+  when: workstation_hardening_enable_unattended_upgrades
+  ansible.builtin.copy:
+    dest: /etc/apt/apt.conf.d/52workstation-unattended-upgrades
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      Unattended-Upgrade::Automatic-Reboot "{{ "true" if workstation_hardening_unattended_auto_reboot else "false" }}";
+      Unattended-Upgrade::Remove-Unused-Dependencies "true";
+      Unattended-Upgrade::Remove-New-Unused-Dependencies "true";
+
+- name: Ensure sudoers drop-in directory exists
+  ansible.builtin.file:
+    path: /etc/sudoers.d
+    state: directory
+    owner: root
+    group: root
+    mode: "0750"
+
+- name: Deploy sudo hardening defaults
+  ansible.builtin.template:
+    src: sudoers/99-workstation-hardening.j2
+    dest: /etc/sudoers.d/99-workstation-hardening
+    owner: root
+    group: root
+    mode: "0440"
+    validate: /usr/sbin/visudo -cf %s
+
+- name: Deploy sysctl hardening settings
+  ansible.builtin.template:
+    src: sysctl/99-workstation-hardening.conf.j2
+    dest: /etc/sysctl.d/99-workstation-hardening.conf
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Apply sysctl settings
+
+- name: Ensure journald drop-in directory exists
+  ansible.builtin.file:
+    path: /etc/systemd/journald.conf.d
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Deploy journald retention settings
+  ansible.builtin.template:
+    src: journald/99-workstation-hardening.conf.j2
+    dest: /etc/systemd/journald.conf.d/99-workstation-hardening.conf
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart journald
+
+- name: Ensure auditd rules directory exists
+  when: workstation_hardening_enable_auditd
+  ansible.builtin.file:
+    path: /etc/audit/rules.d
+    state: directory
+    owner: root
+    group: root
+    mode: "0750"
+
+- name: Deploy auditd rules
+  when: workstation_hardening_enable_auditd
+  ansible.builtin.template:
+    src: audit/99-workstation.rules.j2
+    dest: /etc/audit/rules.d/99-workstation.rules
+    owner: root
+    group: root
+    mode: "0640"
+  notify: Restart auditd
+
+- name: Ensure auditd is enabled and running
+  when: workstation_hardening_enable_auditd
+  ansible.builtin.service:
+    name: auditd
+    enabled: true
+    state: started
+
+- name: Ensure AppArmor is enabled and running
+  when: workstation_hardening_enable_apparmor
+  ansible.builtin.service:
+    name: apparmor
+    enabled: true
+    state: started
+
+- name: Flush hardening handlers before verification
+  ansible.builtin.meta: flush_handlers
+
+- name: Gather effective sshd configuration
+  ansible.builtin.command:
+    argv:
+      - /usr/sbin/sshd
+      - -T
+  register: workstation_hardening_sshd_effective
+  changed_when: false
+
+- name: Assert SSH root login is disabled
+  ansible.builtin.assert:
+    that:
+      - "'permitrootlogin no' in workstation_hardening_sshd_effective.stdout"
+      - "'passwordauthentication no' in workstation_hardening_sshd_effective.stdout"
+      - "'kbdinteractiveauthentication no' in workstation_hardening_sshd_effective.stdout"
+
+- name: Check root account lock status
+  ansible.builtin.command:
+    argv:
+      - passwd
+      - -S
+      - root
+  register: workstation_hardening_root_status
+  changed_when: false
+
+- name: Assert root account is locked
+  ansible.builtin.assert:
+    that:
+      - workstation_hardening_root_status.stdout.split()[1] in ['L', 'LK']
+
+- name: Verify nftables service is enabled
+  when: workstation_hardening_enable_guest_firewall
+  ansible.builtin.command:
+    argv:
+      - systemctl
+      - is-enabled
+      - --quiet
+      - nftables
+  changed_when: false
+
+- name: Verify nftables service is active
+  when: workstation_hardening_enable_guest_firewall
+  ansible.builtin.command:
+    argv:
+      - systemctl
+      - is-active
+      - --quiet
+      - nftables
+  changed_when: false
+
+- name: Verify nftables rules include SSH allow rule
+  when: workstation_hardening_enable_guest_firewall
+  ansible.builtin.command:
+    argv:
+      - /usr/sbin/nft
+      - list
+      - ruleset
+  register: workstation_hardening_nft_ruleset
+  changed_when: false
+
+- name: Assert nftables rules allow SSH
+  when: workstation_hardening_enable_guest_firewall
+  ansible.builtin.assert:
+    that:
+      - "'dport 22' in workstation_hardening_nft_ruleset.stdout"
+
+- name: Verify unattended-upgrades package is installed
+  when: workstation_hardening_enable_unattended_upgrades
+  ansible.builtin.command:
+    argv:
+      - dpkg-query
+      - -W
+      - -f=${Status}
+      - unattended-upgrades
+  register: workstation_hardening_unattended_pkg
+  changed_when: false
+
+- name: Assert unattended-upgrades is installed
+  when: workstation_hardening_enable_unattended_upgrades
+  ansible.builtin.assert:
+    that:
+      - "'install ok installed' in workstation_hardening_unattended_pkg.stdout"
+
+- name: Verify unattended upgrades periodic config is enabled
+  when: workstation_hardening_enable_unattended_upgrades
+  ansible.builtin.command:
+    argv:
+      - grep
+      - -q
+      - 'APT::Periodic::Unattended-Upgrade "1";'
+      - /etc/apt/apt.conf.d/20auto-upgrades
+  changed_when: false
+
+- name: Verify auditd service is active
+  when: workstation_hardening_enable_auditd
+  ansible.builtin.command:
+    argv:
+      - systemctl
+      - is-active
+      - --quiet
+      - auditd
+  changed_when: false
+
+- name: Verify AppArmor kernel module is enabled
+  when: workstation_hardening_enable_apparmor
+  ansible.builtin.command:
+    argv:
+      - cat
+      - /sys/module/apparmor/parameters/enabled
+  register: workstation_hardening_apparmor_enabled
+  changed_when: false
+  failed_when: workstation_hardening_apparmor_enabled.stdout | trim | lower not in ['y', 'yes']

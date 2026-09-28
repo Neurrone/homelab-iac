@@ -1,0 +1,6 @@
+---
+- name: Harden workstation VMs
+  hosts: workstations
+  become: true
+  roles:
+    - workstation_hardening

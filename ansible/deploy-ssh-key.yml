@@ -1,20 +1,20 @@
 ---
 - name: Deploy SSH Key to Hosts
   hosts: "{{ target_hosts }}"
-  become: yes
+  become: true
   serial: 1
   vars_prompt:
     - name: target_hosts
       prompt: "Enter target hosts or group (e.g., docker_vms, all, or specific hostname)"
-      private: no
+      private: false
     - name: ssh_key_path
       prompt: "Enter path to SSH public key file (e.g., ~/.ssh/id_rsa.pub)"
-      private: no
+      private: false
 
   tasks:
     - name: Deploy SSH public key to authorized_keys
-      ansible.builtin.authorized_key:
+      ansible.posix.authorized_key:
         user: "{{ ansible_user }}"
         state: present
         key: "{{ lookup('file', ssh_key_path) }}"
-        exclusive: no
+        exclusive: false

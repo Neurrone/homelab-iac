@@ -1,0 +1,28 @@
+set shell := ["bash", "-euo", "pipefail", "-c"]
+
+sops_env_file := "../../tofu.env.sops.json"
+
+default:
+  @just --list
+
+fmt:
+  tofu fmt -recursive .
+
+fmt-check:
+  tofu fmt -check -recursive .
+
+init env_file=sops_env_file:
+  test -f {{env_file}}
+  sops exec-env {{env_file}} 'tofu init'
+
+validate env_file=sops_env_file:
+  sops exec-env {{env_file}} 'tofu validate'
+
+plan env_file=sops_env_file:
+  sops exec-env {{env_file}} 'tofu plan -input=false'
+
+apply env_file=sops_env_file:
+  sops exec-env {{env_file}} 'tofu apply'
+
+destroy env_file=sops_env_file:
+  sops exec-env {{env_file}} 'tofu destroy'

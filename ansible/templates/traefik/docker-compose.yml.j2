@@ -1,0 +1,37 @@
+services:
+  traefik:
+    container_name: traefik
+    image: docker.io/library/traefik:v3.7.13
+    environment:
+      - TZ={{ timezone }}
+    healthcheck:
+      test: ["CMD-SHELL", "traefik healthcheck"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    labels:
+      traefik.enable: true
+      # traefik.http.routers.traefik.entrypoints: "websecure"
+      # traefik.http.routers.traefik.rule: Host(`traefik.neurrone.com`)
+      # traefik.http.routers.traefik.middlewares: chain-basic-auth@file
+      # traefik.http.routers.traefik.tls: true
+      # traefik.http.routers.traefik.tls.certresolver: letsencrypt
+      # traefik.http.routers.traefik.service: api@internal
+    networks:
+      - web
+    ports:
+      - {{ traefik.http_port }}:80
+      - {{ traefik.https_port }}:443
+      # - 8080:8080
+    restart: unless-stopped
+    volumes:
+      - ./data/dynamic:/etc/traefik/dynamic
+      - ./data/logs:/logs
+      - ./data/shared:/shared
+      - ./data/traefik.toml:/etc/traefik/traefik.toml
+      - ./data/acme.json:/acme.json
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+networks:
+  web:
+    name: web

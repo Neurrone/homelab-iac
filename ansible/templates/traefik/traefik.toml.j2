@@ -1,0 +1,66 @@
+[global]
+  checkNewVersion = true
+  sendAnonymousUsage = false
+
+[entryPoints]
+  [entryPoints.web]
+    address = ":80"
+    [entryPoints.web.http]
+      [entryPoints.web.http.redirections]
+        [entryPoints.web.http.redirections.entryPoint]
+          to = "websecure"
+          scheme = "https"
+          permanent = true
+  
+  [entryPoints.websecure]
+    address = ":443"
+
+[certificatesResolvers.letsencrypt.acme]
+  email = "{{ email }}"
+  storage = "acme.json"
+  # uncomment below to use the staging server, comment for production
+  # caServer = "https://acme-staging-v02.api.letsencrypt.org/directory"
+  [certificatesResolvers.letsencrypt.acme.tlsChallenge]
+
+[log]
+  level = "error"
+
+[accessLog]
+  filePath="/logs/access.log"
+  # JSON format
+  format="json"
+[accessLog.filters]
+    minDuration="2000ms"
+[accessLog.fields]
+    # Keep all the fields by default
+    defaultMode="keep"
+
+[accessLog.fields.headers]
+defaultMode = "keep"
+[accessLog.fields.headers.names]
+User-Agent = "redact"
+Authorization = "drop"
+
+[api]
+  # Enable the API in insecure mode
+  #
+  # Optional
+  # Default: false
+  #
+  # insecure = true
+  # Enabled Dashboard
+  #
+  # Optional
+  # Default: true
+  #
+  # dashboard = true
+
+[ping]
+
+[providers.docker]
+  exposedByDefault = false
+  # network = "web"
+
+[providers.file]
+  directory = "/etc/traefik/dynamic"
+  watch = true

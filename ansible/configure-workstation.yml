@@ -1,0 +1,32 @@
+---
+- name: Configure workstation VMs
+  hosts: workstations
+  become: true
+  vars:
+    workstation_packages_default:
+      - curl
+      - git
+      - just
+      - tmux
+      - vim
+  tasks:
+    - name: Update apt cache and upgrade packages
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 3600
+        upgrade: dist
+    - name: Install packages
+      ansible.builtin.apt:
+        name: "{{ workstation_packages_default + (workstation_packages_extra | default([])) }}"
+        state: present
+
+    - name: Security hardening
+      ansible.builtin.include_role:
+        name: workstation_hardening
+    - name: Install Claude Code
+      ansible.builtin.include_role:
+        name: claude_code
+
+    - name: Install Codex CLI
+      ansible.builtin.include_role:
+        name: codex

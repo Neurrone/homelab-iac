@@ -1,0 +1,51 @@
+services:
+  miniflux:
+    image: miniflux/miniflux:2.3.3
+    container_name: miniflux
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - BATCH_SIZE=1000
+      - CLEANUP_ARCHIVE_UNREAD_DAYS=-1
+      - DATABASE_URL=postgres://{{ miniflux.postgres.user }}:{{ miniflux.postgres.password }}@db/{{ miniflux.postgres.name }}?sslmode=disable
+      - POLLING_FREQUENCY=30
+      - POLLING_LIMIT_PER_HOST=4
+      - POLLING_PARSING_ERROR_LIMIT=10
+      - TZ={{ timezone }}
+      - RUN_MIGRATIONS=1
+    healthcheck:
+      test: ["CMD", "/usr/bin/miniflux", "-healthcheck", "auto"]
+    labels:
+      traefik.enable: true
+      traefik.http.routers.miniflux.rule: Host(`{{ traefik.hosts.miniflux }}`)
+      traefik.http.routers.miniflux.entrypoints: websecure
+      traefik.http.routers.miniflux.middlewares: chain-no-auth-without-rate-limit@file
+      # TLS stuff
+      traefik.http.routers.miniflux.tls: true
+      traefik.http.routers.miniflux.tls.certresolver: letsencrypt
+      traefik.http.services.miniflux.loadbalancer.server.port: 8080
+      traefik.docker.network: web
+    networks:
+      - web
+      - miniflux_default
+    restart: unless-stopped
+  db:
+    image: postgres:17.9
+    environment:
+      - POSTGRES_USER={{ miniflux.postgres.user }}
+      - POSTGRES_PASSWORD={{ miniflux.postgres.password }}
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "{{ miniflux.postgres.user }}"]
+      interval: 10s
+      start_period: 10s
+    networks:
+      - miniflux_default
+    restart: unless-stopped
+    volumes:
+      - ./data:/var/lib/postgresql/data
+
+networks:
+  web:
+    external: true
+  miniflux_default:

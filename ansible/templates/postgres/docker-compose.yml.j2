@@ -1,0 +1,23 @@
+services:
+  postgres:
+    image: postgres:18.3
+    container_name: postgres
+    environment:
+      POSTGRES_PASSWORD: "{{ postgres.root_password }}"
+      TZ: "{{ timezone }}"
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 10s
+      start_period: 10s
+    networks:
+      - postgres_shared
+    ports:
+      - "127.0.0.1:{{ postgres.port }}:5432"
+    restart: unless-stopped
+    volumes:
+      - ./data:/var/lib/postgresql/18/docker
+
+networks:
+  postgres_shared:
+    name: postgres_shared
+    driver: bridge

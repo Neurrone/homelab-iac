@@ -1,0 +1,63 @@
+---
+- name: Deploy Restic
+  hosts: proxmox
+  become: true
+  vars:
+    restic_version: "0.18.1"
+    restic_arch: "linux_amd64"
+    restic_download_url: "https://github.com/restic/restic/releases/download/v{{ restic_version }}/restic_{{ restic_version }}_{{ restic_arch }}.bz2"
+    restic_download_path: "/tmp/restic_{{ restic_version }}_{{ restic_arch }}.bz2"
+    restic_binary_path: "/usr/local/bin/restic"
+  tasks:
+    - name: Check if restic is already installed
+      ansible.builtin.stat:
+        path: "{{ restic_binary_path }}"
+      register: restic_stat
+    - name: Get current restic version if installed
+      ansible.builtin.command: "{{ restic_binary_path }} version"
+      register: restic_current_version
+      changed_when: false
+      failed_when: false
+      when: restic_stat.stat.exists
+    - name: Parse current version
+      ansible.builtin.set_fact:
+        restic_installed_version: "{{ restic_current_version.stdout | regex_replace('^restic ([0-9.]+).*$', '\\1') }}"
+      when: restic_stat.stat.exists and restic_current_version.rc == 0
+    - name: Determine if installation or update is needed
+      ansible.builtin.set_fact:
+        restic_needs_install: "{{ not restic_stat.stat.exists or restic_installed_version is not defined or restic_installed_version != restic_version }}"
+    - name: Download restic release
+      ansible.builtin.get_url:
+        url: "{{ restic_download_url }}"
+        dest: "{{ restic_download_path }}"
+        mode: "0644"
+      when: restic_needs_install
+    - name: Extract restic binary
+      ansible.builtin.command:
+        cmd: "bunzip2 -f {{ restic_download_path }}"
+      when: restic_needs_install
+      changed_when: true
+    - name: Install restic to /usr/local/bin
+      ansible.builtin.copy:
+        src: "/tmp/restic_{{ restic_version }}_{{ restic_arch }}"
+        dest: "{{ restic_binary_path }}"
+        mode: "0755"
+        owner: root
+        group: root
+        remote_src: true
+      when: restic_needs_install
+    - name: Clean up temporary files
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - "{{ restic_download_path }}"
+        - "/tmp/restic_{{ restic_version }}_{{ restic_arch }}"
+      when: restic_needs_install
+    - name: Verify restic installation
+      ansible.builtin.command: "{{ restic_binary_path }} version"
+      register: restic_verify
+      changed_when: false
+    - name: Display installed restic version
+      ansible.builtin.debug:
+        msg: "Restic version installed: {{ restic_verify.stdout_lines[0] }}"

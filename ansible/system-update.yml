@@ -1,0 +1,33 @@
+---
+- name: Update and upgrade all systems
+  hosts: all
+  become: true
+  tasks:
+    - name: Update apt cache and upgrade packages
+      ansible.builtin.apt:
+        update_cache: true
+        upgrade: dist
+        cache_valid_time: 3600
+      register: apt_upgrade_result
+    - name: Get upgraded packages from apt history # noqa: risky-shell-pipe
+      ansible.builtin.shell: |
+        grep "^Upgrade:" /var/log/apt/history.log | tail -1
+      register: upgraded_packages
+      changed_when: false
+      failed_when: false
+      when: apt_upgrade_result.changed # noqa: no-handler
+    - name: Show upgraded packages
+      ansible.builtin.debug:
+        msg: "{{ upgraded_packages.stdout }}"
+      when: apt_upgrade_result.changed # noqa: no-handler
+    - name: Remove unused packages
+      ansible.builtin.apt:
+        autoremove: true
+    - name: Check if reboot required
+      ansible.builtin.stat:
+        path: /var/run/reboot-required
+      register: reboot_required
+    - name: Notify if reboot needed
+      ansible.builtin.debug:
+        msg: "⚠️ {{ inventory_hostname }} REQUIRES A REBOOT"
+      when: reboot_required.stat.exists

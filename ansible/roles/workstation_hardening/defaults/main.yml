@@ -1,0 +1,21 @@
+---
+workstation_hardening_enable_guest_firewall: true
+workstation_hardening_ssh_allowed_cidrs:
+  - 192.168.2.0/24
+workstation_hardening_additional_allowed_tcp_ports: []
+workstation_hardening_allow_icmp: true
+
+workstation_hardening_enable_unattended_upgrades: true
+workstation_hardening_unattended_auto_reboot: false
+
+workstation_hardening_enable_auditd: true
+workstation_hardening_enable_apparmor: true
+
+workstation_hardening_sudo_timestamp_timeout_minutes: 5
+workstation_hardening_sudo_passwd_timeout_minutes: 1
+
+workstation_hardening_enable_ipv6_sysctl: false
+
+workstation_hardening_journald_system_max_use: "500M"
+workstation_hardening_journald_runtime_max_use: "200M"
+workstation_hardening_journald_max_file_sec: "1month"
